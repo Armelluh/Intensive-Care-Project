@@ -49,7 +49,7 @@ def sumPendingOrders(lengthStay, order, startTime, endTime, values, continuous, 
 
             for iidx in range(len(sTime) - 1):
                 mask = (t >= sTime[iidx]) & (t <= sTime[iidx+1])
-                summedOrder[mask, iorder_idx] = val[iidx]
+                summedOrder[mask, iorder_idx] = val.iloc[iidx]
 
     # If variable is not continuous, base the total administration on start and end times
     else:
@@ -62,8 +62,8 @@ def sumPendingOrders(lengthStay, order, startTime, endTime, values, continuous, 
         # put values in summedOrder between start and end time
         valid_indices = np.where(idx)[0]
         for k, i in enumerate(valid_indices):
-            mask = (t >= start_h[i]) & (t <= end_h[i])
-            summedOrder[mask, k] = values[i]
+            mask = (t >= start_h.iloc[i]) & (t <= end_h.iloc[i])
+            summedOrder[mask, k] = values.iloc[i]
 
     # sum these values over time, to get total order administration
     summedOrder = np.sum(summedOrder, axis=1)
