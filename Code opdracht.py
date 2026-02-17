@@ -81,80 +81,80 @@ TParameters = pd.read_csv('TParameters.csv')
 
 # Unit of weight: first get the UnitID from TParameters using ParameterID, then 
 # check corresponding UnitName in TUnits.
-weightUnitID = TParameters.loc[TParameters['ParameterID'] == 80, 'UnitID']
-weightUnit = TUnits.loc[TUnits['UnitID'] == weightUnitID.values[0], 'UnitName']
-
-# Weight of the first patient, use PatientID and (&) ParameterID
-patWeight = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 80), 'Value']  # Fill in condition
-#print(patWeight)
-
-# You should see a variable with size 7x1 with value 95000, indicating that the weight
-# was measured multiple times during the ICU stay. Also extract the times
-# of measurement from table TSignals to check if this is correct.
-weightTimes = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 80), 'Time']
-
-# You probably noticed that the weight unit (kg) and the Value in TSignals do
-# not correspond because that would mean that the patient has a weight of 95000kg!. 
-# Therefore, you have to convert the Value by subtracting 
-# "TUnits.Addition" and subsequently dividing by "TUnits.Multiplier". This
-# conversion should be done for every parameter you will later extract from
-# the database!
-
-weightAddition =  TUnits.loc[TUnits['UnitID'] == weightUnitID.values[0], 'Addition']
-weightMultiplier = TUnits.loc[TUnits['UnitID'] == weightUnitID.values[0], 'Multiplier']
-
-# Apply the addition and then multiplication correction to scale to
-# UnitName, resulting in the correct patient's weight (95 kg)
-patWeight = (patWeight - weightAddition.values[0]) / weightMultiplier.values[0]
-#print(f"\nThe weight of this patient is: {patWeight.iloc[0]:.1f} kg")
-
-############################################################
-## Part 3: Changing measurements over time: cardiac output
-############################################################
-# You are now able to find a specific measurement from a patient and convert
-# it. Let's plot changes in the signal over time, by looking at the Cardiac
-# output of patient 107032. Cardiac output has parameterID = 27 and is also
-# stored in TSignals.
-
-# Get the values and timepoints of cardiac output from patient 107032
-values = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 27), 'Value']
-time = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 27), 'Time']
-
-# For plotting purposes, it is easier to subtract the admission time from
-# the timepoints. In that way, your plot starts at 0 and you don't have to
-# bother with dates.
-# It is possible that you need to convert the time difference to hours. 
-# For example by adding: .astype("timedelta64[s]").astype(float) / 3600. 
-# This depends on how you loaded the dates in earlier parts. 
-time_sub = pd.to_datetime(time) - pd.to_datetime(admDate)
-time = time_sub.dt.total_seconds() / 3600
-
-# Get the unit of cardiac output from TUnits, to use as y-label
-signal_unitID =  TParameters.loc[TParameters['ParameterID'] == 27, 'UnitID'].values[0]
-signal_unit = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'UnitName'].values[0]
-# And the name of the parameter from TParameters, to use as plot title
-signal_name = TParameters.loc[TParameters['ParameterID'] == 27, 'ParameterName'].values[0]
-
-# Convert the values using the addition and multipliers
-signal_addition = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Addition'].values[0]
-signal_multiplier = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Multiplier'].values[0]
-values = (values - signal_addition) / signal_multiplier
-
-# Now let's plot! You can mark each measurement, or draw lines, or a
-# combination. Also experiment with line width and line types.
-plt.figure()
-plt.plot(time, values, 'o-', label=signal_name)
-plt.xlabel('Time (hours)')
-plt.ylabel(signal_unit)
-plt.title(f'Patient {allPatients[0]}: {signal_name}')
-plt.legend()
-
-# If you plot more than one parameter (e.g. using subplots), it is useful
-# to have the same x-axis. What would be a good range to plot of these
-# values, that's comparable over all parameters? 
-plt.xlim(0, lengthStay_hours)
-plt.grid()
-#plt.show()
+# weightUnitID = TParameters.loc[TParameters['ParameterID'] == 80, 'UnitID']
+# weightUnit = TUnits.loc[TUnits['UnitID'] == weightUnitID.values[0], 'UnitName']
+#
+# # Weight of the first patient, use PatientID and (&) ParameterID
+# patWeight = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 80), 'Value']  # Fill in condition
+# #print(patWeight)
+#
+# # You should see a variable with size 7x1 with value 95000, indicating that the weight
+# # was measured multiple times during the ICU stay. Also extract the times
+# # of measurement from table TSignals to check if this is correct.
+# weightTimes = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 80), 'Time']
+#
+# # You probably noticed that the weight unit (kg) and the Value in TSignals do
+# # not correspond because that would mean that the patient has a weight of 95000kg!.
+# # Therefore, you have to convert the Value by subtracting
+# # "TUnits.Addition" and subsequently dividing by "TUnits.Multiplier". This
+# # conversion should be done for every parameter you will later extract from
+# # the database!
+#
+# weightAddition =  TUnits.loc[TUnits['UnitID'] == weightUnitID.values[0], 'Addition']
+# weightMultiplier = TUnits.loc[TUnits['UnitID'] == weightUnitID.values[0], 'Multiplier']
+#
+# # Apply the addition and then multiplication correction to scale to
+# # UnitName, resulting in the correct patient's weight (95 kg)
+# patWeight = (patWeight - weightAddition.values[0]) / weightMultiplier.values[0]
+# #print(f"\nThe weight of this patient is: {patWeight.iloc[0]:.1f} kg")
+#
+# # ############################################################
+# # ## Part 3: Changing measurements over time: cardiac output
+# # ############################################################
+# # # You are now able to find a specific measurement from a patient and convert
+# # # it. Let's plot changes in the signal over time, by looking at the Cardiac
+# # # output of patient 107032. Cardiac output has parameterID = 27 and is also
+# # # stored in TSignals.
+# #
+# # # Get the values and timepoints of cardiac output from patient 107032
+# # values = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 27), 'Value']
+# # time = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == 27), 'Time']
+# #
+# # # For plotting purposes, it is easier to subtract the admission time from
+# # # the timepoints. In that way, your plot starts at 0 and you don't have to
+# # # bother with dates.
+# # # It is possible that you need to convert the time difference to hours.
+# # # For example by adding: .astype("timedelta64[s]").astype(float) / 3600.
+# # # This depends on how you loaded the dates in earlier parts.
+# # time_sub = pd.to_datetime(time) - pd.to_datetime(admDate)
+# # time = time_sub.dt.total_seconds() / 3600
+# #
+# # # Get the unit of cardiac output from TUnits, to use as y-label
+# # signal_unitID =  TParameters.loc[TParameters['ParameterID'] == 27, 'UnitID'].values[0]
+# # signal_unit = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'UnitName'].values[0]
+# # # And the name of the parameter from TParameters, to use as plot title
+# # signal_name = TParameters.loc[TParameters['ParameterID'] == 27, 'ParameterName'].values[0]
+# #
+# # # Convert the values using the addition and multipliers
+# # signal_addition = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Addition'].values[0]
+# # signal_multiplier = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Multiplier'].values[0]
+# # values = (values - signal_addition) / signal_multiplier
+# #
+# # # Now let's plot! You can mark each measurement, or draw lines, or a
+# # # combination. Also experiment with line width and line types.
+# # plt.figure()
+# # plt.plot(time, values, 'o-', label=signal_name)
+# # plt.xlabel('Time (hours)')
+# # plt.ylabel(signal_unit)
+# # plt.title(f'Patient {allPatients[0]}: {signal_name}')
+# # plt.legend()
+# #
+# # # If you plot more than one parameter (e.g. using subplots), it is useful
+# # # to have the same x-axis. What would be a good range to plot of these
+# # # values, that's comparable over all parameters?
+# # plt.xlim(0, lengthStay_hours)
+# # plt.grid()
+# # #plt.show()
 
 ############################################################
 ## Part 4: plotting of multiple parameters
@@ -184,6 +184,54 @@ plt.grid()
 # for i in range(10):
 #     new.append(test[i] + 1)
 
+def plot_multiple_param(parameterIDs,patient_number):
+    print(f"Plotting parameterIDs: {parameterIDs}")
+    plt.figure(figsize=(12, 16))
+    plt.suptitle(f'Patient: {allPatients[patient_number]}')
+
+    axes = []
+
+
+    for iprm in range(len(parameterIDs)):
+        if not any(TSignals['ParameterID'] == parameterIDs[iprm]):
+            print(f"{parameterIDs[iprm]} not found for patient {allPatients[patient_number]} [x]")
+            continue
+        # Get all relevant information about the parameter
+        print(f"{parameterIDs[iprm]} plotted for patient {allPatients[patient_number]} [v]")
+        values = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == parameterIDs[iprm]), 'Value']
+        time = TSignals.loc[(TSignals['PatientID'] == allPatients[0]) & (TSignals['ParameterID'] == parameterIDs[iprm]), 'Time']
+
+        time_sub = pd.to_datetime(time) - pd.to_datetime(admDate)
+        time = time_sub.dt.total_seconds() / 3600
+
+
+        signal_unitID =  TParameters.loc[TParameters['ParameterID'] == parameterIDs[iprm], 'UnitID'].values[0]
+        signal_unit = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'UnitName'].values[0]
+
+        signal_name = TParameters.loc[TParameters['ParameterID'] == parameterIDs[iprm], 'ParameterName'].values[0]
+
+        signal_addition = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Addition'].values[0]
+        signal_multiplier = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Multiplier'].values[0]
+        values = (values - signal_addition) / signal_multiplier
+
+        # Create subplot and store axis handle
+        ax = plt.subplot(len(parameterIDs), 1, iprm + 1)
+        axes.append(ax)
+
+        # Do all your plotting per parameter here
+        ax.plot(time, values, '-', label=signal_name)
+        ax.set_xlabel('Time of stay (hours)')
+        ax.set_ylabel(signal_unit)
+        ax.set_title(f'Patient {allPatients[patient_number]}: {signal_name}')
+        ax.legend()
+        ax.grid()
+
+
+    # Link all subplots along the x-axis
+    for ax in axes[1:]:
+        ax.sharex(axes[0])
+    plt.show()
+    plt.tight_layout()
 plt.figure(figsize=(12, 16))
 plt.suptitle(f'Patient: {allPatients[0]}')
 
@@ -346,7 +394,7 @@ plt.xlabel('Time from Admission (hours)')
 plt.xlim([0, lengthStay_hours])
 plt.grid(True)
 plt.legend()
-#plt.show()
+# plt.show()
 
 ############################################################
 ## Part 6: Overview of pending orders
@@ -355,77 +403,83 @@ plt.legend()
 # hemodynamic status of patients. Use a for-loop over multiple
 # parameterID's to (sub)plot all these values by combining the steps you've
 # seen before.
-
+pIDS = [363, 8218, 8202, 18054]
 # ParameterID's of interest are: 363, 8218, 8202, 18054
 # Note that not all parameters are measured in all patients, so think of a
 # way to use a loop even when a parameter is not measured (hint: you can
 # check if the returned value vector 'isempty').
-plt.figure(figsize=(12, 16))
-plt.suptitle(f'Patient: {allPatients[0]}')
-pIDS = [363, 8218, 8202, 18054]
+def plot_multiple_pending(pIDS,patient):
+    plt.figure(figsize=(12, 16))
+    plt.suptitle(f'Patient: {allPatients[patient]}')
+    axes = []
 
-axes = []
+    for idx, prmID in enumerate(pIDS):
+        idcs = TPending.loc[(TPending['PatientID'] == allPatients[patient]) & (TPending['ParameterID'] == prmID) & (TPending['Status'] == 2)].index
 
-for idx, prmID in enumerate(pIDS):
-    idcs = TPending.loc[(TPending['PatientID'] == allPatients[0]) & (TPending['ParameterID'] == prmID) & (TPending['Status'] == 2)].index
+        signal_name = TParameters.loc[TParameters['ParameterID'] == prmID, 'ParameterName'].values[0]
 
-    if idcs.empty:
-        continue
-
-    startTime = pd.to_datetime(TPending.loc[idcs, 'StartTime']) - pd.to_datetime(admDate)
-    endTime = pd.to_datetime(TPending.loc[idcs, 'EndTime']) - pd.to_datetime(admDate)
-    values = TPending.loc[idcs, 'Value']
-
-    signal_name = TParameters.loc[TParameters['ParameterID'] == prmID, 'ParameterName'].values[0]
-    signal_unitID = TParameters.loc[TParameters['ParameterID'] == prmID,'UnitID'].values[0]
-    signal_unit = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'UnitName'].values[0]
-    
-    signal_multiplier = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Multiplier'].values[0]
-    signal_addition = TUnits.loc[TUnits['UnitID'] == signal_unitID,'Addition'].values[0]
-
-    signal_unit_time = None
-
-    if len(TPending.loc[idcs, 'DripUnitID'].unique()) > 0:
-        if not TDripUnits.loc[TDripUnits['DripUnitID'] == TPending.loc[idcs, 'DripUnitID'].unique()[0]].empty:
-            signal_timeUnitID = TDripUnits.loc[TDripUnits['DripUnitID'] == TPending.loc[idcs, 'DripUnitID'].unique()[0], 'TimeUnitID'].values[0]
-            signal_unit_time = TUnits.loc[TUnits['UnitID'] == signal_timeUnitID,'UnitName'].values[0]
-            signal_dripUnit_multiplier = TUnits.loc[TUnits['UnitID'] == signal_timeUnitID,'Multiplier'].values[0]
-            signal_dripUnit_addition = TUnits.loc[TUnits['UnitID'] == signal_timeUnitID,'Addition'].values[0]
-        else:
+        if idcs.empty:
+            print(f"No instances of {signal_name} (ID: {prmID}) for patient {allPatients[patient]}")
             continue
-    else:
-        continue
 
-    values = (values - signal_addition) / signal_multiplier
-    values = (values - signal_dripUnit_addition) * signal_dripUnit_multiplier
+        print(f"Plotting {signal_name} for patient {allPatients[patient]}...")
+        startTime = pd.to_datetime(TPending.loc[idcs, 'StartTime']) - pd.to_datetime(admDate)
+        endTime = pd.to_datetime(TPending.loc[idcs, 'EndTime']) - pd.to_datetime(admDate)
+        values = TPending.loc[idcs, 'Value']
 
-    signal_plannedOrder = TPending.loc[idcs, 'PlannedOrderID']
+        signal_name = TParameters.loc[TParameters['ParameterID'] == prmID, 'ParameterName'].values[0]
+        signal_unitID = TParameters.loc[TParameters['ParameterID'] == prmID,'UnitID'].values[0]
+        signal_unit = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'UnitName'].values[0]
 
-    if not signal_plannedOrder.empty:
-        signal_continuous = TPlannedOrders.loc[TPlannedOrders['PlannedOrderID'] == signal_plannedOrder.iloc[0], 'Continuous'].values[0]
-    else:
-        signal_continuous = 0
-
-    timeVec, summedOrder = sumPendingOrders(lengthStay, signal_plannedOrder, startTime, endTime, values, signal_continuous, 0.25)
+        signal_multiplier = TUnits.loc[TUnits['UnitID'] == signal_unitID, 'Multiplier'].values[0]
+        signal_addition = TUnits.loc[TUnits['UnitID'] == signal_unitID,'Addition'].values[0]
 
 
-    ax = plt.subplot(len(pIDS), 1, idx + 1)
-    axes.append(ax)
+        if len(TPending.loc[idcs, 'DripUnitID'].unique()) > 0:
+            if not TDripUnits.loc[TDripUnits['DripUnitID'] == TPending.loc[idcs, 'DripUnitID'].unique()[0]].empty:
+                signal_timeUnitID = TDripUnits.loc[TDripUnits['DripUnitID'] == TPending.loc[idcs, 'DripUnitID'].unique()[0], 'TimeUnitID'].values[0]
+                signal_unit_time = TUnits.loc[TUnits['UnitID'] == signal_timeUnitID,'UnitName'].values[0]
+                signal_dripUnit_multiplier = TUnits.loc[TUnits['UnitID'] == signal_timeUnitID,'Multiplier'].values[0]
+                signal_dripUnit_addition = TUnits.loc[TUnits['UnitID'] == signal_timeUnitID,'Addition'].values[0]
+            else:
+                print(f"T{Pending.loc[idcs, 'DripUnitID']} is empty for patient {allPatients[patient]}")
+                continue
+        else:
+            print(f"T{Pending.loc[idcs, 'DripUnitID']} is empty for patient {allPatients[patient]}")
+            continue
 
-    y_label_text = (f"{signal_name} ({signal_unit}/{signal_unit_time})" if signal_unit_time else f"{signal_name} ({signal_unit})")
+        values = (values - signal_addition) / signal_multiplier
+        values = (values - signal_dripUnit_addition) * signal_dripUnit_multiplier
 
-    ax.plot(timeVec, summedOrder, linestyle='-', label=signal_name)
-    ax.set_xlabel('Time from Admission (hours)')
-    ax.set_ylabel(y_label_text)
-    ax.set_title(f'Patient {allPatients[0]}: {signal_name}')
-    ax.set_xlim([0, lengthStay_hours])
-    ax.legend()
-    ax.grid()
+        signal_plannedOrder = TPending.loc[idcs, 'PlannedOrderID']
 
-if len(axes) > 1:
-    for ax in axes[1:]:
-        ax.sharex(axes[0])
+        if not signal_plannedOrder.empty:
+            signal_continuous = TPlannedOrders.loc[TPlannedOrders['PlannedOrderID'] == signal_plannedOrder.iloc[0], 'Continuous'].values[0]
+        else:
+            signal_continuous = 0
 
+        timeVec, summedOrder = sumPendingOrders(lengthStay, signal_plannedOrder, startTime, endTime, values, signal_continuous, 0.25)
+
+
+        ax = plt.subplot(len(pIDS), 1, idx + 1)
+        axes.append(ax)
+
+        y_label_text = (f"{signal_name} ({signal_unit}/{signal_unit_time})" if signal_unit_time else f"{signal_name} ({signal_unit})")
+
+        ax.plot(timeVec, summedOrder, linestyle='-', label=signal_name)
+        ax.set_xlabel('Time from Admission (hours)')
+        ax.set_ylabel(y_label_text)
+        ax.set_title(f'Patient {allPatients[0]}: {signal_name}')
+        ax.set_xlim([0, lengthStay_hours])
+        ax.legend()
+        ax.grid()
+
+    if len(axes) > 1:
+        for ax in axes[1:]:
+            ax.sharex(axes[0])
+
+    plt.tight_layout()
+    plt.show()
 plt.tight_layout()
 plt.show()
 
@@ -439,6 +493,33 @@ plt.show()
 
 # In order to find the relevant ParameterID for heart rate, you can use the 
 # function 'contains()' (hint: note that you can search for parts of a string).
+# prmIDi = TParameters['ParameterName'].str.contains('Cardiac output', case=False, na=False)
+# prmIDs = TParameters.loc[prmIDi,'ParameterID']
+# # print(prmID)
+
+def find_parameter(keywords):
+    found_prmIDs = []
+    for keyword in keywords:
+        prmIDi = TParameters['ParameterName'].str.contains(keyword, case=False, na=False)
+        matched_params = TParameters.loc[prmIDi, ['ParameterID', 'ParameterName']]
+        print()
+        print(f"Found the following parameters for keyword {keyword}:")
+        prmIDs = matched_params['ParameterID'].unique().tolist()
+        found_prmIDs.extend(prmIDs)
+        for index, row in matched_params.iterrows():
+            print(f"ID: {row['ParameterID']} - Name: {row['ParameterName']}")
+    print()
+
+    return found_prmIDs
+
+keywords = ['nier']
+find_parameter(keywords)
+
+# plot_multiple_param(find_parameter(keywords),patient_number = 4)
+# plot_multiple_pending(pIDS = find_parameter(keywords),patient = 4)
+# plot_multiple_param([12724],patient_number = 4)
+plot_multiple_pending(pIDS = [12724],patient = 4)
+
 #prmIDi = TParameters['ParameterName'].str.contains([], case=False, na=False)
 #print(TParameters[prmIDi])
 
